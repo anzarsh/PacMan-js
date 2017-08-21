@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>PacMan</title>
+	<style type="text/css">
+		body {
+			text-align: center;
+		}
+	</style>
+	<script src="js/pacman.js"></script>
+	<script src="js/map.js"></script>
+	<script src="js/start.js"></script>
+</head>
+<body>
+	<canvas id="canvas" width="224" height="288"></canvas>
+	<script type="text/javascript">
+		var canvas = document.getElementById("canvas");
+		var ctx = canvas.getContext("2d");
+		var size = 1;
+
+		canvas.style.backgroundColor = "black";
+
+		window.game = new pacman.Start(ctx);
+		
+
+	</script>
+</body>
+</html>
