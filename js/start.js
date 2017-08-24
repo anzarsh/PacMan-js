@@ -2,15 +2,6 @@
 	var Start = function(){
 		var self = this;
 		
-		// setInterval(function(){
-		// 	console.log(
-		// 		self.keys[37],
-		// 		self.keys[38],
-		// 		self.keys[39],
-		// 		self.keys[40],
-		// 		self.keyLine)
-		// }, 50);
-
 		this.size = 1;
 
 		this.direction = {
@@ -47,7 +38,7 @@
 
 		this.keys = {};
 		this.keyLine = null;
-		this.stepDelay = 10;
+		this.stepDelay = 20;
 		window.addEventListener("keydown", function(e){self.keyDownFire(e)});
 	};
 
@@ -56,94 +47,42 @@
 
 		var key = e.keyCode;
 
+		//отмена повторного нажатия той же клавиши
 		if(self.keys[key]) return;
-		if(Object.keys(self.keys).length && (!self.pacman.isInXCenter() || !self.pacman.isInYCenter())){
+
+		//поставить в очередь
+		if(Object.keys(self.keys).length>0){
 			self.keyLine = key;
-			setTimeout(function(){self.keyLine = null}, self.stepDelay*10);
 			return;
-		} else if(Object.keys(self.keys).length && !self.keyLine && self.map.canGo(self.pacman.x, self.pacman.y, self.direction[self.keyLine])){
-			self.clearKeys();
-			self.keyLine = null;
 		}
-			
-		
 
-		if (key == 37){
+		//может ли PacMan идти в указанном направлении
+		if(self.map.canGo(self.pacman.x, self.pacman.y, self.direction[key])){
 
-			if (!self.pacman.isInYCenter() || !self.map.canGo(self.pacman.x, self.pacman.y, "left")) return;
 			self.keys[key] = setInterval(function(){
-				if (!self.map.canGo(self.pacman.x, self.pacman.y, "left") && self.pacman.isInYCenter()) self.clearKeys();
-				if(self.pacman.isInXCenter() && self.keyLine && self.map.canGo(self.pacman.x, self.pacman.y, self.direction[self.keyLine])){
-					console.log(2);
+
+				//сделать движение в направлении в соответствии с нажатой клавишей
+				self.pacman.turn(self.direction[key]);
+
+
+				if (self.keyLine && self.pacman.isInCenter() && self.map.canGo(self.pacman.x, self.pacman.y, self.direction[self.keyLine])){
+					/*если есть на очереди движение в другую сторону и Pacman может туда пойти*/
+					var tempKey = self.keyLine;
 					self.clearKeys();
-					var event = {keyCode: self.keyLine};
+					self.keyDownFire({keyCode: tempKey});
+				} else if(self.pacman.isInCenter() && !self.map.canGo(self.pacman.x, self.pacman.y, self.direction[key])){
+					/*если PacMan-у в этом направлении уже некуда идти*/
+					self.clearKeys();
+				} else if(self.pacman.isInCenter()){
+					/*если есть очередь на движение в другом направлении, но Pacman не может туда повернуть, до следующей клетки, то очистить эту очередь*/
 					self.keyLine = null;
-					self.keyDownFire(event);
-					return;
 				}
-				self.pacman.left();
 
 			}, self.stepDelay);
-		
-		} else	if (key == 38){
-			
-			if (!self.pacman.isInXCenter() && !self.map.canGo(self.pacman.x, self.pacman.y, "top")) return;
-			self.keys[key] = setInterval(function(){
-				if (!self.map.canGo(self.pacman.x, self.pacman.y, "top") && self.pacman.isInXCenter()) self.clearKeys();
-				if(self.pacman.isInYCenter() && self.keyLine && self.map.canGo(self.pacman.x, self.pacman.y, self.direction[self.keyLine])){
-					console.log(3);
-					self.clearKeys();
-					var event = {keyCode: self.keyLine};
-					self.keyLine = null;
-					self.keyDownFire(event);
-					return;
-				}
-				self.pacman.top();
-			}, self.stepDelay);
-		
-		} else if (key == 39){
-			
-			if (!self.pacman.isInYCenter() && !self.map.canGo(self.pacman.x, self.pacman.y, "right")) return;
-			self.keys[key] = setInterval(function(){
-				if (!self.map.canGo(self.pacman.x, self.pacman.y, "right") && self.pacman.isInYCenter()) self.clearKeys();
-				if(self.pacman.isInXCenter() && self.keyLine && self.map.canGo(self.pacman.x, self.pacman.y, self.direction[self.keyLine])){
-					self.clearKeys();
-					var event = {keyCode: self.keyLine};
-					self.keyLine = null;
-					self.keyDownFire(event);
-					return;
-				}
-				self.pacman.right();
-			}, self.stepDelay);
-		
-		} else if (key == 40){
-			
-			if (!self.pacman.isInXCenter() && !self.map.canGo(self.pacman.x, self.pacman.y, "bottom")) self.clearKeys();
-			self.keys[key] = setInterval(function(){
-				if (!self.map.canGo(self.pacman.x, self.pacman.y, "bottom") && self.pacman.isInXCenter()) return ;
-				if(self.pacman.isInYCenter() && self.keyLine && self.map.canGo(self.pacman.x, self.pacman.y, self.direction[self.keyLine])){
-					self.clearKeys();
-					var event = {keyCode: self.keyLine};
-					self.keyLine = null;
-					self.keyDownFire(event);
-					return;
-				}
-				self.pacman.bottom();
-			}, self.stepDelay);
-		
+
 		}
-		
+
 	};
-
-		// window.addEventListener("keyup", function(e){
-		// 	var key = e.keyCode;
-		// 	if(self.keys[key]){
-		// 		clearInterval(self.keys[key]);
-		// 		delete self.keys[key];
-		// 	}
-		// });
-
-	// };
 
 	Start.prototype.clearKeys = function(){
 		var self = this;
@@ -152,7 +91,7 @@
 			delete self.keys[k];
 		}
 		self.keys = {};
-		// self.keyLine = null;
+		self.keyLine = null;
 	};
 
 	Start.prototype.drawMap = function(map){
